@@ -3,7 +3,6 @@ package `in`.rahul.todoapp.adapter
 import `in`.rahul.todoapp.R
 import `in`.rahul.todoapp.activity.EditTodoActivity
 import `in`.rahul.todoapp.model.TodoModel
-import `in`.rahul.todoapp.utils.CommonUtils.showMessage
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -13,7 +12,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.main_layout.view.*
 
-class MainAdapter(val context: Context, val todoList: ArrayList<TodoModel>) :
+class MainAdapter(val context: Context, val todoList: MutableList<TodoModel>) :
     RecyclerView.Adapter<MainAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -36,7 +35,7 @@ class MainAdapter(val context: Context, val todoList: ArrayList<TodoModel>) :
         holder.clMain.setOnClickListener {
             val stMessage =
                 "userId: ${listItem.userId}, id: ${listItem.id}, comp: ${listItem.completed}"
-            showMessage(context, stMessage)
+//            showMessage(context, stMessage)
             val bundle = Bundle()
             bundle.putInt("userId", listItem.userId!!)
             bundle.putInt("id", listItem.id!!)

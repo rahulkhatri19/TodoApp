@@ -2,6 +2,7 @@ package `in`.rahul.todoapp.activity
 
 import `in`.rahul.todoapp.R
 import `in`.rahul.todoapp.adapter.MainAdapter
+import `in`.rahul.todoapp.database.TodoData
 import `in`.rahul.todoapp.database.TodoDatabase
 import `in`.rahul.todoapp.model.TodoModel
 import `in`.rahul.todoapp.utils.ClientHelperInterface
@@ -11,6 +12,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +29,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        recycleView.visibility = View.GONE
+        shimmer_layout.visibility = View.VISIBLE
+        shimmer_layout.startShimmer()
+
         mDB = TodoDatabase.getInstance(this@MainActivity)
         getTodoData()
         fab_add_note.setOnClickListener {
@@ -36,30 +42,41 @@ class MainActivity : AppCompatActivity() {
 
     private fun getTodoData() {
         ClientHelperInterface.create().getTodoData()
-            .enqueue(object : Callback<ArrayList<TodoModel>> {
-                override fun onFailure(call: Call<ArrayList<TodoModel>>, t: Throwable) {
+            .enqueue(object : Callback<MutableList<TodoModel>> {
+                override fun onFailure(call: Call<MutableList<TodoModel>>, t: Throwable) {
                     LogMessage("Main Act", t.message.toString())
                 }
 
                 override fun onResponse(
-                    call: Call<ArrayList<TodoModel>>,
-                    response: Response<ArrayList<TodoModel>>
+                    call: Call<MutableList<TodoModel>>,
+                    response: Response<MutableList<TodoModel>>
                 ) {
                     //   LogMessage("Main Act: ", response.body().toString())
 
-                    recycleView.layoutManager =
-                        LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL, false)
-                    recycleView.adapter = MainAdapter(this@MainActivity, response.body()!!)
+//                    recycleView.layoutManager =
+//                        LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL, false)
+//                    recycleView.adapter = MainAdapter(this@MainActivity, response.body()!!)
                     insertIntoDatabase(response.body()!!)
                 }
 
             })
     }
 
-    private fun insertIntoDatabase(dataList: ArrayList<TodoModel>) {
+    private fun insertIntoDatabase(dataList: MutableList<TodoModel>) {
         GlobalScope.launch(Dispatchers.IO) {
-            mDB?.todoDataDao()?.insertAllData(dataList)
+            val localDataList = mutableListOf<TodoData>()
+            for (i in dataList.indices) {
+                val todoData = TodoData(
+                    dataList[i].id,
+                    dataList[i].userId,
+                    dataList[i].title,
+                    dataList[i].description
+                )
+                localDataList.add(todoData)
+            }
+            mDB?.todoDataDao()?.insertAllData(localDataList)
         }
+        fetchTodoFromDb()
     }
 
     override fun onResume() {
@@ -68,6 +85,12 @@ class MainActivity : AppCompatActivity() {
             internetDialog()
         }
         getTodoData()
+        shimmer_layout.startShimmer()
+    }
+
+    override fun onPause() {
+        shimmer_layout.stopShimmer()
+        super.onPause()
     }
 
     override fun onDestroy() {
@@ -107,23 +130,48 @@ class MainActivity : AppCompatActivity() {
             if (!isOnline(this)) {
                 noDataDialog()
             } else {
+                getTodoData()
                 dialog.dismiss()
             }
         }
-        val alert = builder.create()
-        alert.show()
+        runOnUiThread {
+            val alert = builder.create()
+            alert.show()
+        }
     }
 
     private fun fetchTodoFromDb() {
         GlobalScope.launch(Dispatchers.IO) {
-            val todoData = mDB?.todoDataDao()?.getAllData()
-            if (todoData == null && todoData?.size == 0) {
+            val todoDataList = mDB?.todoDataDao()?.getAllData()
+            val todoModelList = mutableListOf<TodoModel>()
+            if (todoDataList == null || todoDataList.size == 0) {
                 noDataDialog()
             } else {
-                recycleView.layoutManager =
-                    LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL, false)
-                recycleView.adapter = MainAdapter(this@MainActivity, todoData!!)
+                LogMessage("main Act: ", "${todoDataList.size}")
+                for (i in todoDataList.indices) {
+                    LogMessage("main Act: ", "id: ${todoDataList[i].id}")
+                    val todoModel = TodoModel()
+                    todoModel.id = todoDataList[i].id
+                    todoModel.userId = todoDataList[i].userId
+                    todoModel.title = todoDataList[i].title
+                    todoModel.description = todoDataList[i].description!!
+                    todoModel.completed = false
+                    todoModelList.add(todoModel)
+                }
+                runOnUiThread {
+                    recycleView.layoutManager =
+                        LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL, false)
+                    recycleView.adapter = MainAdapter(this@MainActivity, todoModelList)
+                    recycleView.visibility = View.VISIBLE
+                    shimmer_layout.visibility = View.GONE
+                    shimmer_layout.stopShimmer()
+                }
             }
         }
+    }
+
+    override fun onBackPressed() {
+        finish()
+        super.onBackPressed()
     }
 }

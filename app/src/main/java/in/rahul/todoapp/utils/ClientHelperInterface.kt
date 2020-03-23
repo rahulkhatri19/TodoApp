@@ -8,7 +8,7 @@ import retrofit2.http.GET
 
 interface ClientHelperInterface {
     @GET("todos")
-    fun getTodoData(): Call<ArrayList<TodoModel>>
+    fun getTodoData(): Call<MutableList<TodoModel>>
 
     companion object Factory {
         fun create(): ClientHelperInterface {

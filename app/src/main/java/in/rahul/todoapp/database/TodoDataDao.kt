@@ -1,21 +1,20 @@
 package `in`.rahul.todoapp.database
 
-import `in`.rahul.todoapp.model.TodoModel
 import androidx.room.*
 
 @Dao
 interface TodoDataDao {
 
     @Query("Select * from todoData")
-    fun getAllData(): MutableList<TodoModel>
+    fun getAllData(): MutableList<TodoData>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertAllData(todoData: MutableList<TodoModel>)
+    fun insertAllData(todoData: MutableList<TodoData>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertOneData(todoData: TodoModel)
+    fun insertOneData(todoData: TodoData)
 
     @Update
-    fun updateData(todoData: TodoModel)
+    fun updateData(todoData: TodoData)
 
 }
