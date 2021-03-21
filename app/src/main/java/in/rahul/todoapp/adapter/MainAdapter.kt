@@ -18,6 +18,7 @@ class MainAdapter(val context: Context, val todoList: MutableList<TodoModel>) :
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvTitle = view.tv_title
         val clMain = view.cl_main
+        val tvDescription = view.tv_description
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -32,6 +33,7 @@ class MainAdapter(val context: Context, val todoList: MutableList<TodoModel>) :
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val listItem = todoList.get(position)
         holder.tvTitle.text = listItem.title
+        holder.tvDescription.text = listItem.description
         holder.clMain.setOnClickListener {
             val stMessage =
                 "userId: ${listItem.userId}, id: ${listItem.id}, comp: ${listItem.completed}"

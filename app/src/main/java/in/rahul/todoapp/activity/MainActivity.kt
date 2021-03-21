@@ -8,11 +8,13 @@ import `in`.rahul.todoapp.model.TodoModel
 import `in`.rahul.todoapp.utils.ClientHelperInterface
 import `in`.rahul.todoapp.utils.CommonUtils.LogMessage
 import `in`.rahul.todoapp.utils.CommonUtils.isOnline
+import `in`.rahul.todoapp.utils.Constants.GRID_COUNT
 import android.app.AlertDialog
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +36,8 @@ class MainActivity : AppCompatActivity() {
         shimmer_layout.startShimmer()
 
         mDB = TodoDatabase.getInstance(this@MainActivity)
-        getTodoData()
+//        getTodoData()
+        fetchTodoFromDb()
         fab_add_note.setOnClickListener {
             startActivity(Intent(this, AddTodoActivity::class.java))
         }
@@ -81,10 +84,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (!isOnline(this)) {
-            internetDialog()
-        }
-        getTodoData()
+//        if (!isOnline(this)) {
+//            internetDialog()
+//        }
+//        getTodoData()
+        fetchTodoFromDb()
         shimmer_layout.startShimmer()
     }
 
@@ -130,7 +134,7 @@ class MainActivity : AppCompatActivity() {
             if (!isOnline(this)) {
                 noDataDialog()
             } else {
-                getTodoData()
+//                getTodoData()
                 dialog.dismiss()
             }
         }
@@ -160,7 +164,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 runOnUiThread {
                     recycleView.layoutManager =
-                        LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL, false)
+                        GridLayoutManager(this@MainActivity, GRID_COUNT)
                     recycleView.adapter = MainAdapter(this@MainActivity, todoModelList)
                     recycleView.visibility = View.VISIBLE
                     shimmer_layout.visibility = View.GONE
